@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Garderob">
+  <meta name="theme-color" content="#09090b">
+  <title>Garderob</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #09090b; 
+      color: #fff;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .container { padding: 20px; padding-bottom: 100px; }
+    
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 8px; }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .header span { color: #71717a; font-size: 14px; }
+    
+    /* Form */
+    .form { background: #18181b; border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid #27272a; }
+    .form h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .form-fields { display: flex; flex-direction: column; gap: 12px; }
+    
+    input, select { 
+      width: 100%; 
+      background: #27272a; 
+      border: 1px solid #3f3f46; 
+      border-radius: 12px; 
+      padding: 12px 16px; 
+      color: #fff; 
+      font-size: 16px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #52525b; }
+    input::placeholder { color: #71717a; }
+    select { appearance: none; }
+    
+    /* Image upload */
+    .image-upload { 
+      background: #27272a; 
+      border: 1px dashed #3f3f46; 
+      border-radius: 12px; 
+      padding: 24px; 
+      text-align: center; 
+      cursor: pointer; 
+    }
+    .image-upload-icon { font-size: 30px; margin-bottom: 8px; }
+    .image-upload-text { color: #71717a; font-size: 14px; }
+    .image-preview { height: 128px; width: 128px; object-fit: cover; border-radius: 12px; margin: 0 auto; }
+    .hidden { display: none; }
+    
+    /* Buttons */
+    .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+    .btn { flex: 1; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 500; border: none; cursor: pointer; transition: transform 0.1s; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #27272a; color: #fff; }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-primary:disabled { opacity: 0.5; }
+    
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .card { background: #18181b; border-radius: 16px; overflow: hidden; border: 1px solid #27272a; cursor: pointer; transition: transform 0.1s; }
+    .card:active { transform: scale(0.97); }
+    .card-image { width: 100%; height: 144px; object-fit: cover; }
+    .card-placeholder { width: 100%; height: 144px; background: #27272a; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .card-content { padding: 12px; }
+    .card-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-occasion { font-size: 12px; color: #71717a; }
+    
+    /* Empty state */
+    .empty { text-align: center; padding: 80px 20px; color: #71717a; }
+    .empty-icon { font-size: 60px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; margin-bottom: 4px; }
+    .empty-text { font-size: 14px; }
+    
+    /* FAB */
+    .fab { 
+      position: fixed; 
+      bottom: 32px; 
+      right: 24px; 
+      width: 56px; 
+      height: 56px; 
+      background: #fff; 
+      color: #000; 
+      border: none; 
+      border-radius: 50%; 
+      font-size: 28px; 
+      font-weight: 300;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .fab:active { transform: scale(0.95); }
+    
+    /* Detail view */
+    .detail-image { width: 100%; height: 320px; object-fit: cover; }
+    .detail-gradient { position: absolute; inset: 0; background: linear-gradient(to top, #09090b, transparent, transparent); }
+    .detail-content { padding: 20px; }
+    .back-btn { color: #a1a1aa; background: none; border: none; font-size: 16px; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .detail-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .detail-title { font-size: 24px; font-weight: 700; }
+    .detail-tag { display: inline-block; margin-top: 8px; font-size: 14px; background: #27272a; padding: 4px 12px; border-radius: 20px; color: #d4d4d8; }
+    .delete-btn { color: #f87171; font-size: 14px; background: rgba(248,113,113,0.1); padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; }
+    
+    /* Detail items */
+    .detail-items { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+    .detail-item { display: flex; align-items: center; gap: 12px; background: #18181b; padding: 16px; border-radius: 12px; }
+    .detail-item-icon { font-size: 24px; }
+    .detail-item-label { font-size: 12px; color: #71717a; }
+    .detail-item-value { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function OutfitApp() {
+      const [outfits, setOutfits] = useState(() => {
+        const saved = localStorage.getItem('outfits');
+        return saved ? JSON.parse(saved) : [];
+      });
+      const [showForm, setShowForm] = useState(false);
+      const [selectedOutfit, setSelectedOutfit] = useState(null);
+      const [newOutfit, setNewOutfit] = useState({
+        name: '',
+        top: '',
+        bottom: '',
+        jacket: '',
+        shoes: '',
+        accessories: '',
+        occasion: '',
+        image: null
+      });
+
+      const occasions = ['Vardag', 'Jobb', 'Fest', 'Date', 'Träning', 'Annat'];
+
+      useEffect(() => {
+        localStorage.setItem('outfits', JSON.stringify(outfits));
+      }, [outfits]);
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setNewOutfit({ ...newOutfit, image: reader.result });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const addOutfit = () => {
+        if (newOutfit.name) {
+          setOutfits([{ ...newOutfit, id: Date.now() }, ...outfits]);
+          setNewOutfit({ name: '', top: '', bottom: '', jacket: '', shoes: '', accessories: '', occasion: '', image: null });
+          setShowForm(false);
+        }
+      };
+
+      const deleteOutfit = (id) => {
+        setOutfits(outfits.filter(o => o.id !== id));
+        setSelectedOutfit(null);
+      };
+
+      // Detail View
+      if (selectedOutfit) {
+        const outfit = outfits.find(o => o.id === selectedOutfit);
+        if (!outfit) return null;
+        
+        return (
+          <div>
+            {outfit.image && (
+              <div style={{position: 'relative'}}>
+                <img src={outfit.image} alt={outfit.name} className="detail-image" />
+                <div className="detail-gradient" />
+              </div>
+            )}
+            <div className="detail-content">
+              <button onClick={() => setSelectedOutfit(null)} className="back-btn">
+                ← Tillbaka
+              </button>
+              
+              <div className="detail-header">
+                <div>
+                  <h1 className="detail-title">{outfit.name}</h1>
+                  {outfit.occasion && <span className="detail-tag">{outfit.occasion}</span>}
+                </div>
+                <button onClick={() => deleteOutfit(outfit.id)} className="delete-btn">
+                  Radera
+                </button>
+              </div>
+              
+              <div className="detail-items">
+                {outfit.top && (
+                  <div className="detail-item">
+                    <span className="detail-item-icon">👕</span>
+                    <div><p className="detail-item-label">Överdel</p><p className="detail-item-value">{outfit.top}</p></div>
+                  </div>
+                )}
+                {outfit.bottom && (
+                  <div className="detail-item">
+                    <span className="detail-item-icon">👖</span>
+                    <div><p className="detail-item-label">Underdel</p><p className="detail-item-value">{outfit.bottom}</p></div>
+                  </div>
+                )}
+                {outfit.jacket && (
+                  <div className="detail-item">
+                    <span className="detail-item-icon">🧥</span>
+                    <div><p className="detail-item-label">Jacka</p><p className="detail-item-value">{outfit.jacket}</p></div>
+                  </div>
+                )}
+                {outfit.shoes && (
+                  <div className="detail-item">
+                    <span className="detail-item-icon">👟</span>
+                    <div><p className="detail-item-label">Skor</p><p className="detail-item-value">{outfit.shoes}</p></div>
+                  </div>
+                )}
+                {outfit.accessories && (
+                  <div className="detail-item">
+                    <span className="detail-item-icon">💍</span>
+                    <div><p className="detail-item-label">Accessoarer</p><p className="detail-item-value">{outfit.accessories}</p></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="container">
+          {/* Header */}
+          <div className="header">
+            <h1>Garderob</h1>
+            <span>{outfits.length} outfits</span>
+          </div>
+
+          {/* Add Form */}
+          {showForm && (
+            <div className="form">
+              <h2>Ny outfit</h2>
+              <div className="form-fields">
+                <input
+                  type="text"
+                  placeholder="Namn på outfit *"
+                  value={newOutfit.name}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, name: e.target.value })}
+                />
+                
+                <select
+                  value={newOutfit.occasion}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, occasion: e.target.value })}
+                >
+                  <option value="">Välj tillfälle</option>
+                  {occasions.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+
+                <input
+                  type="text"
+                  placeholder="Överdel"
+                  value={newOutfit.top}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, top: e.target.value })}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Underdel"
+                  value={newOutfit.bottom}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, bottom: e.target.value })}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Jacka"
+                  value={newOutfit.jacket}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, jacket: e.target.value })}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Skor"
+                  value={newOutfit.shoes}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, shoes: e.target.value })}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Accessoarer"
+                  value={newOutfit.accessories}
+                  onChange={(e) => setNewOutfit({ ...newOutfit, accessories: e.target.value })}
+                />
+
+                <label>
+                  <div className="image-upload">
+                    {newOutfit.image ? (
+                      <img src={newOutfit.image} alt="Preview" className="image-preview" />
+                    ) : (
+                      <>
+                        <div className="image-upload-icon">📷</div>
+                        <div className="image-upload-text">Lägg till bild</div>
+                      </>
+                    )}
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
+              </div>
+
+              <div className="btn-row">
+                <button onClick={() => setShowForm(false)} className="btn btn-secondary">Avbryt</button>
+                <button onClick={addOutfit} disabled={!newOutfit.name} className="btn btn-primary">Spara</button>
+              </div>
+            </div>
+          )}
+
+          {/* Outfits Grid */}
+          {outfits.length === 0 && !showForm ? (
+            <div className="empty">
+              <div className="empty-icon">👔</div>
+              <p className="empty-title">Inga outfits ännu</p>
+              <p className="empty-text">Tryck + för att börja</p>
+            </div>
+          ) : (
+            <div className="grid">
+              {outfits.map(outfit => (
+                <div key={outfit.id} onClick={() => setSelectedOutfit(outfit.id)} className="card">
+                  {outfit.image ? (
+                    <img src={outfit.image} alt={outfit.name} className="card-image" />
+                  ) : (
+                    <div className="card-placeholder">👔</div>
+                  )}
+                  <div className="card-content">
+                    <h3 className="card-title">{outfit.name}</h3>
+                    {outfit.occasion && <span className="card-occasion">{outfit.occasion}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* FAB */}
+          {!showForm && <button onClick={() => setShowForm(true)} className="fab">+</button>}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<OutfitApp />);
+  </script>
+</body>
+</html>
